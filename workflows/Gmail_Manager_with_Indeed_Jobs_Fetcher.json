@@ -1,0 +1,1626 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": "=",
+        "options": {}
+      },
+      "id": "6af7a77b-aa2d-460a-baa1-75888af3ce79",
+      "name": "Get message content",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        -220,
+        900
+      ],
+      "typeVersion": 2.1,
+      "webhookId": "37f18a1f-b33e-4593-b05f-35a21b042efc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CzqKLvJfIsGQc6BL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Trigger If there is incoming email",
+        "height": 340,
+        "width": 520,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        700
+      ],
+      "id": "2840dfda-2d2b-408a-9166-d107ca3ad8c0",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": "",
+        "options": {}
+      },
+      "id": "9d9a0b9e-83d6-40ec-b820-71bd1ee05a61",
+      "name": "Get Email Content and HTML2",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        580,
+        620
+      ],
+      "typeVersion": 2.1,
+      "webhookId": "eab5cb3d-cd58-4169-ba1c-5b498612340f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CzqKLvJfIsGQc6BL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "id,html, textAsHtml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        800,
+        620
+      ],
+      "id": "e428d102-94e9-445b-8865-c29dee6f51a8",
+      "name": "Get HTML and ID3"
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        1020,
+        620
+      ],
+      "id": "80e68f53-c964-404f-bff7-218683d25f11",
+      "name": "Markdown2"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=id:  {{ $json.id }},\n{{ $json.content }}"
+            },
+            {
+              "content": "你是一個摘要助手，負責根據使用者提供的內容生成繁體中文摘要，確保摘要精確、簡潔且符合上下文，並以 JSON 格式輸出。 你的核心職責包括： 理解並分析內容：識別關鍵資訊，確保摘要保留核心要點。 生成簡潔摘要：用簡單明瞭的語言表達內容重點，避免冗餘信息。 保持語氣和風格：根據原文風格提供適當的摘要，不添加個人見解或評論。 識別重要性與類型：判斷這封信件或訊息的性質（如推廣、政府文件、保險、教育、求職等），並評估其重要性（1-5 星，5 為最重要）。 決定是否需要回應：判斷是否需要回覆，若需要則提供回應英文草稿，若不需要則標記為 \"n/a\"。 篩選垃圾信息：如果內容屬於廣告或無關緊要的 SPAM，可標記為 \"can delete\"。 回應要求： 直接輸出 JSON，無額外說明或標註。 若內容較長，可按段落摘要，確保完整保留重要資訊。 保持摘要邏輯清晰、語義準確，避免錯誤解讀。 若原文指示不需要總結，則不輸出摘要。 JSON 格式範例：\n\n{ \"id\":\"id\",\"from\": \"發件人\", \"time\": \"YYYY-MM-DD HH:MM\", \"type\": \"類型（如政府文件、保險、教育、推廣等）\", \"important\": 1-5, \"summary\": \"這封信的摘要\", \"can_delete\": true/false, \"need_to_reply\": true/false, \"reply_draft\": \"回應草稿，若無需回應則為 'n/a'\" }",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        920,
+        840
+      ],
+      "id": "4eb72e23-b0d3-4932-92bb-0aa910f2da30",
+      "name": "OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "o3n6dreFrR1ZvlNP",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 假設你的 JSON 字符串在 items[0].json.jsonString 中\nconst jsonString = $json.message.content;\n\ncleared = jsonString.replace(/```json|```/g, '').trim();\n\n// 將 JSON 字符串解析為 JSON 物件\nconst jsonObject = JSON.parse(cleared);\n// 使用正則表達式移除 ```json ``` 或 ``` 之類的標記\n\n\nreturn {\n    json: jsonObject  // 回傳 JSON 物件\n  }\n;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        1020
+      ],
+      "id": "8738614c-994e-4fdd-9d11-d7396547c291",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "chatId": "1814894861",
+        "text": "={{ $json.message.content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1020,
+        1020
+      ],
+      "id": "e80cecd6-5953-4d3a-a305-f90aeb1d68af",
+      "name": "Telegram1",
+      "webhookId": "8eacc026-24e7-496d-a6a7-6bf015376558",
+      "credentials": {
+        "telegramApi": {
+          "id": "M2rFytGSOAyYvKfF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $json.data\nconst textAsHtml = $json.textAsHtml\nconst html = $json.html\n\n    // 檢查是否為字符串，如果是則去掉前後空白\nconst dataStr = typeof data === \"string\" ? data.trim() : \"\";\nconst textAsHtmlStr = typeof textAsHtml === \"string\" ? textAsHtml.trim() : \"\";\nconst htmlStr = typeof html === \"string\" ? html.trim() : \"\";\n\n    // 按優先順序選擇內容\nconst finalContent = dataStr !== \"\" ? dataStr\n                      : textAsHtmlStr !== \"\" ? textAsHtmlStr\n                      : htmlStr;\n\nreturn {\n  json: {\n  id: $json.id,\n   content: finalContent // 存入新 key \"content\"\n        }\n    };\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        840
+      ],
+      "id": "0e3702a2-1fc1-457d-ac44-4f1cbddacbd3",
+      "name": "Code5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28bdb017-8235-4b1e-8290-1320edd0f0fc",
+              "name": "message.content",
+              "value": "=發信人: {{ $json.from }}\n內容:   {{ $json.summary }}\n\n重要性: {{ $json.important }}\nID:     {{ $json.type }}\n時間:   {{ $json.time }}\n\n可刪除: {{ $json.can_delete }}\n需回應: {{ $json.need_to_reply }}\n回應稿: {{ $json.reply_draft }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        1020
+      ],
+      "id": "5e20f611-45b3-42c3-8971-a995bb01a865",
+      "name": "Telegram Content2"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "INBOX"
+          ]
+        },
+        "options": {}
+      },
+      "id": "3f39c02f-a247-4151-84d6-60e22758903c",
+      "name": "Gmail trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "position": [
+        -460,
+        740
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CzqKLvJfIsGQc6BL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "python",
+        "pythonCode": "trash_list = [\n    \"MongoDB\",\n   \n]\n\nmove_list = [\n  {\"Job Bank\": \"Job Ads\"},\n \n  \n\n]\n\n# 取得 Email 資料，確保不,會報錯\nthreadId = _input.item.json.get(\"threadId\", \"\")\nid = _input.item.json.get(\"id\", \"\")\nsubject = str(_input.item.json.get(\"headers\", {}).get(\"subject\", \"\")).lower()  # 確保 subject 是小寫\n_from = str(_input.item.json.get(\"from\", \"\").get(\"text\",\"\")).lower()  # 確保 _from 是字串且小寫\n\nmove = False\nmove_folder = \"None\"\ntrash = False\n\n# 檢查是否該丟垃圾桶（subject 或 from 包含關鍵字）\n#if any(trash_word.lower() in (subject or \"\").lower() or trash_word.lower() in (_from or \"\").lower() for trash_word in trash_list):\n#    trash = True\n\n\n# 檢查是否該移動（subject 或 from 包含關鍵字）\nfor rule in move_list:\n    for keyword, folder in rule.items():\n        if keyword.lower() in (subject or \"\").lower() or keyword.lower() in (_from or \"\").lower():\n            move = True\n            move_folder = folder\n            break  # 找到第一個匹配的就跳出\n        else:\n            move = True\n            move_folder = \"Enomars_Achieve\"\n          \n# 檢查是否該丟垃圾桶（subject 或 from 包含關鍵字）\nif any(trash_word.lower() in (subject or \"\").lower() or trash_word.lower() in (_from or \"\").lower() for trash_word in trash_list):\n    trash = True\n    move = False\n\n# 輸出結果（n8n 需要用 output）\noutput = {\n  \"threadId\":threadId,\n    \"id\": id,\n    \"subject\": subject,\n    \"_from\": _from,\n    \"move\": move,\n    \"move_folder\": move_folder,\n    \"trash\": trash\n}\n\n\n\nreturn output\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        1280
+      ],
+      "id": "4a277058-f4d3-4eb9-bfce-2d524cd69281",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f92b24ca-9055-45ab-97d1-783d3642d4b5",
+              "leftValue": "={{ $json.labelIds }}",
+              "rightValue": "DRAFT",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -220,
+        740
+      ],
+      "id": "3aa7562e-a57e-485c-b99e-5d7598e9b175",
+      "name": "Do not do my Draft"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8eb326e1-1747-4c50-9af4-4f0f688eb649",
+              "leftValue": "={{ $json.move }}",
+              "rightValue": "MongoDB ",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1940,
+        -280
+      ],
+      "id": "34cb1984-6807-4ee4-89cd-c1a8cb17688b",
+      "name": "Move Folder"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "addLabels",
+        "threadId": "={{ $('Move Folder').item.json.threadId }}",
+        "labelIds": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1240,
+        -280
+      ],
+      "id": "7c21f4ce-d499-4a19-b4a8-5ad02bd1a6ab",
+      "name": "Add to ",
+      "webhookId": "62c53622-4258-41f4-89d1-f13452f1b589",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CzqKLvJfIsGQc6BL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1720,
+        -280
+      ],
+      "id": "8886c2e2-2b99-47e7-ba33-872779290df6",
+      "name": "Gmail2",
+      "webhookId": "6a1c2420-e8c9-4e0c-82b8-57bcc716638d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CzqKLvJfIsGQc6BL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f8c205c0-5c53-4a36-9d67-0299ebfe9d9b",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "={{ $('Code1').item.json.move_folder }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1480,
+        -280
+      ],
+      "id": "fe745e35-7f62-4868-a905-d2108f26b8de",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "removeLabels",
+        "threadId": "={{ $json.messages[0].threadId }}",
+        "labelIds": [
+          "INBOX"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1700,
+        -60
+      ],
+      "id": "b2814c03-2ba4-4c3d-aeb8-914ec2ae086d",
+      "name": "Gmail1",
+      "webhookId": "3bd9578f-0d6f-490d-aeeb-0ed1e150adae",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CzqKLvJfIsGQc6BL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1814894861",
+        "text": "=已把以下電郵:\n{{ $('Move Folder').item.json._from }}\n\n{{ $('Move Folder').item.json.subject }}\n\n移動到:\n{{ $('If1').item.json.name }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1240,
+        -60
+      ],
+      "id": "a4e0b613-22fa-44bf-a2c1-947289c39f2f",
+      "name": "Trash Telegram2",
+      "webhookId": "5c5e6ae0-7b7b-4123-ba12-9865a8d59cee",
+      "credentials": {
+        "telegramApi": {
+          "id": "M2rFytGSOAyYvKfF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "removeLabels",
+        "messageId": "={{ $('Code1').item.json.id }}",
+        "labelIds": [
+          "INBOX",
+          "CATEGORY_PERSONAL"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1480,
+        -60
+      ],
+      "id": "07c0e1dc-8f01-4dec-ad90-cf4d67daa29a",
+      "name": "Gmail3",
+      "webhookId": "cae0a551-c521-4d41-88cd-48049e0fb083",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CzqKLvJfIsGQc6BL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.messages[0].id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1480,
+        420
+      ],
+      "id": "b60eb016-0e7d-437b-8d5e-cc795c5a7324",
+      "name": "Gmail",
+      "webhookId": "ec96974e-a2ce-4148-a453-2e7b8024902f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CzqKLvJfIsGQc6BL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "1814894861",
+        "text": "=已刪除:\n{{ $json.From }}\n\n{{ $json.Subject }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1240,
+        420
+      ],
+      "id": "19e35aae-4425-42d1-acea-54ccca94c00e",
+      "name": "Trash Telegram1",
+      "webhookId": "cd420343-7c29-41e5-864c-3a92ccf09bc3",
+      "credentials": {
+        "telegramApi": {
+          "id": "M2rFytGSOAyYvKfF",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "trash",
+        "threadId": "={{ $json.threadId }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1680,
+        420
+      ],
+      "id": "21df0a90-8709-4824-9ac9-f83b083ad275",
+      "name": "Trash1",
+      "webhookId": "9f5c5040-e990-4d29-b69f-ff1ad481342b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CzqKLvJfIsGQc6BL",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8eb326e1-1747-4c50-9af4-4f0f688eb649",
+              "leftValue": "={{ $json.trash }}",
+              "rightValue": "MongoDB ",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1920,
+        420
+      ],
+      "id": "09d889d8-d6c9-4962-936f-59bc9b790dd7",
+      "name": "If My Trash1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "I6JWXxXxjHKOmNgO",
+          "mode": "list",
+          "cachedResultName": "Convert Indeed Gmail to HTML"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        360,
+        160
+      ],
+      "id": "ae298c02-f50e-41c6-9904-c59585c1f992",
+      "name": "Execute Workflow"
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "Link",
+              "field2": "Link"
+            }
+          ]
+        },
+        "resolve": "preferInput1",
+        "options": {}
+      },
+      "id": "b585b8ad-2463-448d-938c-b027f530c8ac",
+      "name": "Compare Datasets",
+      "type": "n8n-nodes-base.compareDatasets",
+      "position": [
+        -300,
+        -280
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        -760,
+        -240
+      ],
+      "id": "5fff5999-6eee-4b7d-bb4c-e7e0487a55eb",
+      "name": "Wait for All Input using Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "function escapeTelegramMarkdown(text) {\n  if (typeof text !== 'string') return text;\n  \n  const specialChars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!', '\\\\'];\n  \n  let escapedText = text.replace(/\\\\/g, '\\\\\\\\');\n  specialChars.forEach(char => {\n    escapedText = escapedText.replace(new RegExp(`\\\\${char}`, 'g'), `\\\\${char}`);\n  });\n  return escapedText;\n}\n\nfunction escapeUrlForMarkdown(url) {\n  if (typeof url !== 'string') return url;\n  \n  const urlSpecialChars = ['_', '*', '[', ']', '(', ')', '`'];\n  let escapedUrl = url;\n  urlSpecialChars.forEach(char => {\n    escapedUrl = escapedUrl.replace(new RegExp(`\\\\${char}`, 'g'), `\\\\${char}`);\n  });\n  return escapedUrl;\n}\n\nfunction cleanText(text) {\n  if (typeof text !== 'string') return text;\n  return text.replace(/[^a-zA-Z0-9.,\\s]/g, '');\n}\n\nfunction processItem(item) {\n  if (!item || typeof item !== 'object') return item;\n  \n  const processed = {};\n  for (const [key, value] of Object.entries(item)) {\n    if (typeof value === 'string') {\n      processed[key] = key === \"applyLink\" \n        ? escapeUrlForMarkdown(value)\n        : key === \"description\"\n          ? cleanText(value)\n          : escapeTelegramMarkdown(value);\n    } else {\n      processed[key] = value;\n    }\n  }\n  return processed;\n}\n\n// 保持原始结构处理\nconst inputs = $input.all();\n\n// 保持完全相同的结构：{json: processedData}\nreturn inputs.map(inputItem => {\n  return {\n    json: processItem(inputItem.json) // 保持原json层级\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -620,
+        40
+      ],
+      "id": "3789b090-5fdc-446b-8967-1122ba070449",
+      "name": "Code",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "-4649139625",
+        "text": "=職位: {{ $json.position }}\n公司: {{ $json.company }}\n地點: {{ $json.location }}\n類別: {{ $json.workType }}\n工資: {{ $json.salary }}\n\n介紹: {{ $json.description }}\n\n網址: [Link]({{ $json.applyLink }})",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -100,
+        40
+      ],
+      "id": "e04e4077-9fc2-4578-8d1e-8beb8a5b9323",
+      "name": "Trash Telegram3",
+      "webhookId": "6cd5d36f-79c9-4726-912f-9c540a3424c3",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "M2rFytGSOAyYvKfF",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "batchSize": "={{$input.all().length}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -400,
+        40
+      ],
+      "id": "8d31ece1-2560-439d-820f-4cbc38f4e81c",
+      "name": "Loop Over Items2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "chatId": "-4649139625",
+        "text": "=職位: {{  $('Execute Workflow').item.json.position }}\n\n工作: {{ $json.message.content.responsibilities }}\n\n公司: {{  $('Execute Workflow').item.json.company }}\n地點: {{  $('Execute Workflow').item.json.location }}\n類別: {{  $('Execute Workflow').item.json.workType }}\n工資: {{  $('Execute Workflow').item.json.salary }}\n\n介紹: {{ $json.message.content.description }}\n\n\n\n網址: [Link]({{  $('Execute Workflow').item.json.applyLink }})\n\n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        840,
+        -480
+      ],
+      "id": "ac4d0292-8f81-4f50-9dfd-c594298c6d0a",
+      "name": "Trash Telegram",
+      "webhookId": "01c61926-ea2d-4c41-aff4-e940660f1870",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "M2rFytGSOAyYvKfF",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "Control Delete / Achieve",
+        "height": 340,
+        "width": 520,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        1180
+      ],
+      "id": "480b1ede-9594-4f5e-893c-e4ea1031e24e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Delete to Trash and Notify user by Telegram",
+        "height": 340,
+        "width": 960,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1960,
+        320
+      ],
+      "id": "26aff199-1429-43ba-b66c-7f3346816a28",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Put in to folder according to the code\n",
+        "height": 500,
+        "width": 1060,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2040,
+        -360
+      ],
+      "id": "de6fdf47-ec4d-4a4f-b47f-7393b22460f4",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "Chat GPT Summary and send to Telegram",
+        "height": 760,
+        "width": 860,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        460,
+        500
+      ],
+      "id": "5b3d85cb-ed6e-4978-a8c6-07d9e8495bdd",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "Save Jobs from Indeed Email to Airtable and Telegram user",
+        "height": 1060,
+        "width": 1720,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        -680
+      ],
+      "id": "5b9a55eb-a4ff-4956-845f-18f74007bcf9",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "Send all Jobs",
+        "height": 280,
+        "width": 840,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        0
+      ],
+      "id": "9b4eba41-1b83-4b19-a6d1-a61f1c911360",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "Link, ['Job Title'], Date, Company, ['Work Type'], Salary, Description, Location, id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -620,
+        -580
+      ],
+      "id": "862e722b-74a8-4a58-9025-b00008681e2c",
+      "name": "Split Out",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://selenium.org/scrape",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Lcf66226840!"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.Link }}"
+            },
+            {
+              "name": "use_debugging",
+              "value": "true"
+            },
+            {
+              "name": "headless",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -40,
+        -560
+      ],
+      "id": "3d91081e-3e7c-4296-87c9-a5c0f95d3140",
+      "name": "HTTP Request",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "dataPropertyName": "html",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "jobDescription",
+              "cssSelector": "#jobDescriptionText"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        360,
+        -540
+      ],
+      "id": "1eb0c0e3-de65-426d-af71-b2f25ad2724a",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=id:  {{ $('Split Out').item.json.id }},\nJobs: {{ $('If').item.json.title }}\nDescription:{{ $('Split Out').item.json.Description }} \nFull Description: {{ $json.jobDescription }}\nCompany: {{ $('Split Out').item.json.Company }}  \nSalary: {{ $('Split Out').item.json.Salary }} \nLocation: {{ $('Split Out').item.json.Location }} "
+            },
+            {
+              "content": "你是一個求職助手，負責根據使用者提供的職缺資訊生成摘要，請幫用戶使用繁體中文總結工作資訊。你的核心職責包括：理解並分析職缺內容：提取關鍵資訊，如職位名稱、職責、薪資、公司名稱、地點等。生成簡潔摘要：用簡單明瞭的語言表達工作重點，避免冗餘信息。輸出 JSON 格式，不包含 \"important\"、\"can_ignore\" 或 \"recommended_action\"。\n\nJSON 格式範例：\n{\n  \"id\": \"職缺 ID\",\n  \"title\": \"職位名稱\",\n  \"company\": \"公司名稱\",\n  \"location\": \"工作地點\",\n  \"salary\": \"薪資範圍\",\n  \"responsibilities\": \"職位主要職責\",\n  \"job_link\": \"應徵連結\",\n  \"description\": \"工作介紹\"\n}\n\n",
+              "role": "system"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        540,
+        -520
+      ],
+      "id": "a7d50c14-7a7a-49ae-aeff-ef3a439b1031",
+      "name": "OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "o3n6dreFrR1ZvlNP",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": "=1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -280,
+        -580
+      ],
+      "id": "bfc1b5f8-609f-48c4-933a-05b111ed0d7b",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1DLkcQdghQYtj29IyN5OhYAVpKIuJddl2gQMiQHdPx00",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DLkcQdghQYtj29IyN5OhYAVpKIuJddl2gQMiQHdPx00/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Link": "={{ $('Execute Workflow').item.json.applyLink }}",
+            "Job Title": "={{ $('Execute Workflow').item.json.position }}",
+            "Date": "={{ $('Execute Workflow').item.json.scrapedDate }}",
+            "Company": "={{ $('Execute Workflow').item.json.company }}",
+            "Work Type": "={{ $('Execute Workflow').item.json.workType }}",
+            "Salary": "={{ $('Execute Workflow').item.json.salary }}",
+            "Description": "={{ $('Execute Workflow').item.json.description }}",
+            "Location": "={{ $('Execute Workflow').item.json.location }}",
+            "id": "=00"
+          },
+          "matchingColumns": [
+            "Link"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Location",
+              "displayName": "Location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Salary",
+              "displayName": "Salary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Link",
+              "displayName": "Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Work Type",
+              "displayName": "Work Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interview Ans",
+              "displayName": "Interview Ans",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cover Letter EN",
+              "displayName": "Cover Letter EN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "New CV",
+              "displayName": "New CV",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cover Letter CN",
+              "displayName": "Cover Letter CN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -520,
+        -240
+      ],
+      "id": "49817b7a-6f03-4947-8a77-8b3d53e416c6",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NrRrNHKo3ceFFgaL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1DLkcQdghQYtj29IyN5OhYAVpKIuJddl2gQMiQHdPx00",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Jobs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1DLkcQdghQYtj29IyN5OhYAVpKIuJddl2gQMiQHdPx00/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Link",
+              "lookupValue": "={{ $json.applyLink }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -840,
+        -500
+      ],
+      "id": "f02156ed-0c0c-411c-b489-8a4dfccbffcc",
+      "name": "Google Sheets1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NrRrNHKo3ceFFgaL",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3e42914a-ec21-40eb-944f-e6956517343f",
+              "leftValue": "={{ $json.title }}",
+              "rightValue": "Job Search Canada | Indeed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        120,
+        -560
+      ],
+      "id": "63c2b8db-a02f-4fd0-b7e9-3d4de1402542",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "Get message content": {
+      "main": [
+        [
+          {
+            "node": "Get Email Content and HTML2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute Workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Email Content and HTML2": {
+      "main": [
+        [
+          {
+            "node": "Get HTML and ID3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get HTML and ID3": {
+      "main": [
+        [
+          {
+            "node": "Markdown2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown2": {
+      "main": [
+        [
+          {
+            "node": "Code5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI2": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Telegram Content2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code5": {
+      "main": [
+        [
+          {
+            "node": "OpenAI2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Content2": {
+      "main": [
+        [
+          {
+            "node": "Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail trigger": {
+      "main": [
+        [
+          {
+            "node": "Do not do my Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Move Folder",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If My Trash1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Do not do my Draft": {
+      "main": [
+        [
+          {
+            "node": "Get message content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Move Folder": {
+      "main": [
+        [
+          {
+            "node": "Gmail2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to ": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Add to ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail1": {
+      "main": [
+        [
+          {
+            "node": "Gmail3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail3": {
+      "main": [
+        [
+          {
+            "node": "Trash Telegram2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "Trash Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trash1": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If My Trash1": {
+      "main": [
+        [
+          {
+            "node": "Trash1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait for All Input using Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Datasets": {
+      "main": [
+        [],
+        [],
+        [],
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for All Input using Merge": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trash Telegram3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Trash Telegram3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trash Telegram": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "Trash Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Wait for All Input using Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7dc14095bb9e4b7a017c7731a0357e02bee505e39c5393fb98892dee551dffe4"
+  }
+}
